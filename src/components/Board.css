@@ -1,0 +1,41 @@
+.board {
+  padding-top: 60px;
+  position: relative;
+}
+
+.focus-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.board-columns {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  padding-top: 60px;
+  overflow-x: auto;
+  min-height: calc(100vh - 100px);
+}
+
+/* Mobile spacing adjustment */
+@media (max-width: 768px) {
+  .board-columns {
+    padding-top: 100px;
+  }
+}

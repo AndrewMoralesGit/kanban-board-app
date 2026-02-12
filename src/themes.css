@@ -1,0 +1,84 @@
+/* ===========================
+   CSS VARIABLES - THEME SYSTEM
+   =========================== */
+
+:root {
+  /* Transition for smooth theme switching */
+  --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ===========================
+   DARK THEME (Default)
+   =========================== */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1a1a1a;
+  --bg-hover: #2a2a2a;
+  --bg-input: #1a1a1a;
+  
+  /* Text */
+  --text-primary: #f5f5f5;
+  --text-secondary: #b5b5b5;
+  --text-tertiary: #808080;
+  
+  /* Borders */
+  --border-primary: #262626;
+  --border-secondary: #333333;
+  --border-hover: #404040;
+  
+  /* Accents */
+  --accent-primary: #2a2a2a;
+  --accent-secondary: #404040;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.8);
+  
+  /* Status colors */
+  --color-danger: #c42b1c;
+  --color-danger-hover: #d63b2a;
+  --color-success: #107c10;
+  --color-warning: #f7630c;
+}
+
+/* ===========================
+   LIGHT THEME
+   =========================== */
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e8e8e8;
+  --bg-hover: #e0e0e0;
+  --bg-input: #f8f8f8;
+  
+  /* Text */
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  
+  /* Borders */
+  --border-primary: #d0d0d0;
+  --border-secondary: #c0c0c0;
+  --border-hover: #a0a0a0;
+  
+  /* Accents */
+  --accent-primary: #f0f0f0;
+  --accent-secondary: #e0e0e0;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+  
+  /* Status colors */
+  --color-danger: #d13438;
+  --color-danger-hover: #e14348;
+  --color-success: #0f7b0f;
+  --color-warning: #f7630c;
+}

@@ -1,0 +1,115 @@
+.confirm-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.confirm-modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp 0.2s ease-out;
+  position: relative;
+  z-index: 10002;
+  transition: var(--theme-transition);
+}
+
+.confirm-modal-title {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.confirm-modal-message {
+  margin: 0 0 24px 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-modal-actions .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-modal-actions .btn-secondary {
+  background-color: var(--accent-secondary);
+  color: var(--text-primary);
+}
+
+.confirm-modal-actions .btn-secondary:hover {
+  background-color: var(--border-hover);
+}
+
+.confirm-modal-actions .btn-primary {
+  background-color: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.confirm-modal-actions .btn-primary:hover {
+  opacity: 0.9;
+}
+
+.confirm-modal-actions .btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.confirm-modal-actions .btn-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .confirm-modal-actions {
+    flex-direction: column;
+  }
+
+  .confirm-modal-actions .btn {
+    width: 100%;
+  }
+}
