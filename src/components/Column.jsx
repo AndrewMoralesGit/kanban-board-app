@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import TaskCard from './TaskCard'
 import plusIcon from '../assets/plus.svg'
+import editIcon from '../assets/pencil.svg'
+import deleteIcon from '../assets/trash.svg'
 import ConfirmModal from './ConfirmModal'
 import './Column.css'
 
@@ -108,14 +110,14 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
                 className="btn-icon"
                 title="Editar categoría"
               >
-                ✎
+                <img src={editIcon} alt="Editar" />
               </button>
               <button
                 onClick={handleDeleteCategory}
                 className="btn-icon btn-delete"
                 title="Eliminar categoría"
               >
-                🗑
+                <img src={deleteIcon} alt="Eliminar" />
               </button>
               {isFocused && (
                 <button
