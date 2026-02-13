@@ -35,16 +35,19 @@
   color: var(--text-secondary);
   font-size: 1.2rem;
   cursor: pointer;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
-  opacity: 0; /* Hidden by default in mini view */
+  opacity: 0;
   transition: opacity 0.2s;
   z-index: 10;
 }
 
-.column:hover .fab-add-task {
-  opacity: 1; /* Show on hover */
+/* Only show FAB when column is focused */
+.column.focused .fab-add-task {
+  display: flexbox; /* Fallback */
+  display: flex;
+  opacity: 1;
 }
 
 .fab-add-task:hover {
