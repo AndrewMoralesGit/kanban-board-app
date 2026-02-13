@@ -84,7 +84,7 @@ body.modal-open .task-card {
   pointer-events: none;
 }
 
-body.modal-open .modal-backdrop,
+body.modal-open .task-modal-backdrop,
 body.modal-open .task-history-modal {
   pointer-events: auto;
 }
@@ -312,17 +312,21 @@ body.modal-open .task-history-modal {
   }
 }
 
-/* History Modal */
-.modal-backdrop {
+/* History & Detail Modal Backdrop */
+.task-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background-color: rgba(0, 0, 0, 0.7);
-  z-index: 9998;
+  z-index: 99998; /* High, but below content (content is 10000?? No, content needs update or check) */
   backdrop-filter: blur(2px);
   pointer-events: auto;
+  touch-action: none;
 }
 
 .task-history-modal {
@@ -334,7 +338,7 @@ body.modal-open .task-history-modal {
   border: 1px solid var(--accent-secondary);
   border-radius: 12px;
   padding: 20px;
-  z-index: 9999;
+  z-index: 99999; /* Higher than task-modal-backdrop */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
   max-height: 80vh;
   max-width: 500px;
@@ -617,7 +621,7 @@ body.modal-open .task-history-modal {
   border: 1px solid var(--accent-secondary);
   border-radius: 12px;
   padding: 24px;
-  z-index: 10000;
+  z-index: 99999; /* Higher than task-modal-backdrop (99998) */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
   max-height: 80vh;
   max-width: 600px;

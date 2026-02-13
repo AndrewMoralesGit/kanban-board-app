@@ -59,6 +59,10 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
   const [isDragging, setIsDragging] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const dragStartX = useRef(0)
+  const dragStartY = useRef(0)
+  const isLocked = useRef(false) // If true, we determined the direction
+  const isHorizontalSwipe = useRef(false) // If true, we are swiping horizontally
+  
   const cardRef = useRef(null)
 
   function handleSave() {
@@ -99,20 +103,66 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
   // Drag handlers
   function handleDragStart(e) {
     if (isEditing) return
-    setIsDragging(true)
+    // Don't set isDragging true yet, wait for movement confirmation
     dragStartX.current = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX
+    dragStartY.current = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY
+    isLocked.current = false
+    isHorizontalSwipe.current = false
   }
 
   function handleDragMove(e) {
-    if (!isDragging || isEditing) return
+    if (isEditing) return
     
+    // Safety check just in case dragEnd didn't fire
+    if (e.buttons === 0 && e.type.includes('mouse') && !isDragging) return 
+
     const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX
-    const diff = currentX - dragStartX.current
+    const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY
     
-    // Limit drag distance
-    const maxDrag = 120
-    const limitedDiff = Math.max(-maxDrag, Math.min(maxDrag, diff))
-    setDragOffset(limitedDiff)
+    const diffX = currentX - dragStartX.current
+    const diffY = currentY - dragStartY.current
+    
+    // 1. Direction Locking Phase
+    if (!isLocked.current) {
+      // Need a small threshold to determine direction
+      const moveThreshold = 5
+      
+      if (Math.abs(diffX) > moveThreshold || Math.abs(diffY) > moveThreshold) {
+        isLocked.current = true
+        
+        // If vertical movement is dominant, IT IS A SCROLL. Ignore this drag.
+        if (Math.abs(diffY) > Math.abs(diffX)) {
+          isHorizontalSwipe.current = false
+          return
+        } else {
+          // Horizontal dominant -> Start dragging
+          isHorizontalSwipe.current = true
+          setIsDragging(true)
+        }
+      }
+    }
+
+    // 2. Dragging Phase
+    if (isLocked.current && isHorizontalSwipe.current) {
+       // Prevent default only if we are sure it's a swipe to avoid scrolling page
+       if (e.type.includes('touch') && e.cancelable) {
+         // e.preventDefault() // React passive events might block this, but we rely on CSS touch-action
+       }
+       
+       // Limit drag distance
+       const maxDrag = 120
+       
+       // Add resistance/damping at edges
+       let effectiveDiff = diffX
+       if (Math.abs(diffX) > maxDrag) {
+         // Logarithmic compression or simple clamping
+         effectiveDiff = diffX > 0 
+           ? maxDrag + (diffX - maxDrag) * 0.2
+           : -maxDrag + (diffX + maxDrag) * 0.2
+       }
+
+       setDragOffset(effectiveDiff)
+    }
   }
 
   function handleDragEnd() {

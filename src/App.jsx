@@ -168,7 +168,7 @@ function AppContent() {
 
 
 
-  async function addTask(categoryId, title, description = '', dueDate = null, recurringConfig = null) {
+  async function addTask(categoryId, title, description = '', dueDate = null, recurringConfig = null, type = 'task') {
     if (!selectedBoardId) return
 
     const now = new Date().toISOString()
@@ -213,6 +213,7 @@ function AppContent() {
           target_count: recurringConfig.targetCount || 1, // Set target count for instance
           current_count: 0, // Initialize progress
           status: 'pendiente',
+          type: 'task', // Recurring tasks are always tasks for now
           position: tasks.filter(t => t.category_id === categoryId).length,
           status_history: [{
             status: 'pendiente',
@@ -226,7 +227,7 @@ function AppContent() {
         setTasks([...tasks, data[0]])
       }
     } else {
-      // Normal task creation
+      // Normal task/note creation
       const { data, error } = await supabase
         .from('tasks')
         .insert([{
@@ -236,6 +237,7 @@ function AppContent() {
           category_id: categoryId,
           board_id: selectedBoardId,
           status: 'pendiente',
+          type: type, // Use provided type
           position: tasks.filter(t => t.category_id === categoryId).length,
           status_history: [{
             status: 'pendiente',

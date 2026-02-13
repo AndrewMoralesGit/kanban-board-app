@@ -1,0 +1,274 @@
+.note-card-wrapper {
+  margin-bottom: 12px;
+  isolation: isolate;
+}
+
+.note-card {
+  position: relative;
+  background: var(--bg-tertiary);
+  /* Subtle differentiation: dashed border or specific color accent on left */
+  border: 1px dashed var(--accent-secondary);
+  border-left: 3px solid var(--text-tertiary); /* Distinct from tasks */
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  color: var(--text-secondary);
+}
+
+/* Dark mode specific tweaks if needed, but vars should handle it */
+[data-theme="dark"] .note-card {
+  background: var(--bg-tertiary);
+  /* slightly lighter/different tone if needed? 
+     Let's keep it consistent with design system: clean and minimal.
+  */
+}
+
+.note-card:hover {
+  /* Removed transform rotation/scale */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-color: var(--text-tertiary);
+  z-index: 2;
+}
+
+.note-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.note-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+  word-break: break-word;
+  flex: 1;
+}
+
+.note-card-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+.note-card:hover .note-card-actions {
+  opacity: 1;
+}
+
+.note-description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0;
+  color: var(--text-secondary);
+  /* Keep handwriting font as a nice touch, but ensure fallback works well */
+  font-family: 'Kalam', 'Architects Daughter', cursive, sans-serif;
+  font-style: italic; /* Emphasize "note" feel */
+}
+
+.note-footer {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Editing State logic moved to Modal */
+
+/* Adjust icons */
+.note-card .btn-icon {
+  color: var(--text-tertiary);
+}
+
+.note-card .btn-icon img {
+  /* Use standard filter from TaskCard or consistent theme */
+  filter: brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(85%);
+  opacity: 0.7;
+}
+
+.note-card:hover .btn-icon img {
+  opacity: 1;
+}
+
+[data-theme="light"] .note-card .btn-icon img {
+  filter: brightness(0) saturate(100%) invert(20%);
+}
+
+/* 
+   FULL SCREEN NOTE EDIT MODAL STYLES 
+   Overrides standard modal styles for a specific "Note Edit" experience
+*/
+
+.note-edit-modal {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important; /* Reset padding to control manually */
+  overflow: hidden; /* Prevent outer scroll */
+  /* On desktop, keep it centered but larger */
+  width: 90%;
+  max-width: 600px;
+  height: 80vh;
+}
+
+.note-edit-form-full {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.note-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-secondary);
+  background: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.modal-title-center {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.btn-icon-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  color: var(--text-tertiary);
+}
+
+.btn-icon-action:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.btn-save-action {
+  color: var(--accent-primary);
+}
+
+.btn-cancel-action {
+  color: var(--text-secondary);
+}
+
+/* Ensure icons are visible in dark mode by inverting them if they are black SVGs */
+[data-theme="dark"] .btn-icon-action img {
+  filter: brightness(0) saturate(100%) invert(100%);
+}
+
+[data-theme="dark"] .btn-save-action img {
+  filter: brightness(0) saturate(100%) invert(100%);
+}
+
+[data-theme="dark"] .btn-cancel-action img {
+  /* Pure white */
+  filter: brightness(0) saturate(100%) invert(100%); 
+}
+
+/* Light mode specific */
+[data-theme="light"] .btn-icon-action img {
+  filter: brightness(0) saturate(100%) invert(0%);
+}
+
+.note-edit-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+  overflow-y: auto;
+  background: var(--bg-secondary);
+}
+
+.note-input-full {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  width: 100%;
+  outline: none;
+  padding: 0;
+}
+
+.note-textarea-full {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  width: 100%;
+  outline: none;
+  resize: none;
+  padding: 0;
+}
+
+/* Placeholder styling */
+.note-input-full::placeholder,
+.note-textarea-full::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+/* MOBILE SPECIFIC OVERRIDES */
+@media (max-width: 768px) {
+  .note-edit-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+  
+  .note-edit-header {
+    padding-top: max(16px, env(safe-area-inset-top)); /* Handle notch */
+  }
+  
+  .note-edit-body {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Validation Error Styles */
+.input-error {
+  border-bottom: 2px solid #ef4444 !important; /* Red underline */
+  color: #ef4444 !important;
+}
+
+.input-error::placeholder {
+  color: #fca5a5 !important;
+}
+
+.shake {
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}

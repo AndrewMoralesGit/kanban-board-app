@@ -25,17 +25,25 @@
 }
 
 .board-columns {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* Dense grid */
   gap: 20px;
-  padding: 20px;
-  padding-top: 60px;
-  overflow-x: auto;
-  min-height: calc(100vh - 100px);
+  padding: 24px;
+  padding-top: 80px;
+  align-items: start;
+  overflow-y: auto;
+  height: 100vh;
 }
 
-/* Mobile spacing adjustment */
+/* Mobile spacing and grid adjustment */
 @media (max-width: 768px) {
   .board-columns {
     padding-top: 100px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 4px !important; /* Tiny gap */
+    padding: 4px !important;
+    padding-top: 120px !important;
+    overflow-x: hidden !important;
+    align-content: start !important; /* Pack rows to top, don't stretch */
   }
 }

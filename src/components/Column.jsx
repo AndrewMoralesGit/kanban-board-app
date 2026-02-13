@@ -1,38 +1,57 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import TaskCard from './TaskCard'
+import NoteCard from './NoteCard'
 import plusIcon from '../assets/plus.svg'
 import editIcon from '../assets/pencil.svg'
 import deleteIcon from '../assets/trash.svg'
+import checkIcon from '../assets/check.svg'
+import xIcon from '../assets/x.svg'
 import ConfirmModal from './ConfirmModal'
 import './Column.css'
 
 function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpdateCategory, onDeleteCategory, onUpdateTaskStatus, historyTaskId, setHistoryTaskId, isFocused, onFocus, onExitFocus }) {
   const [isAddingTask, setIsAddingTask] = useState(false)
+  const [isAddingNote, setIsAddingNote] = useState(false)
+  
+  // Task Form State
   const [taskTitle, setTaskTitle] = useState('')
   const [taskDescription, setTaskDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [isRecurring, setIsRecurring] = useState(false)
   const [recurringDuration, setRecurringDuration] = useState(21)
   const [targetCount, setTargetCount] = useState(1)
-  const [activeTab, setActiveTab] = useState('pendiente')
+  
+  // Note Form State
+  const [noteTitle, setNoteTitle] = useState('')
+  const [noteDescription, setNoteDescription] = useState('')
+  const [showNoteError, setShowNoteError] = useState(false)
+
+  const [activeTab, setActiveTab] = useState('pendiente') // 'pendiente' | 'en_progreso' | 'completado' | 'notes'
   const [isEditingCategory, setIsEditingCategory] = useState(false)
   const [categoryName, setCategoryName] = useState(category.name)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  // Filter tasks vs notes
+  const notes = tasks.filter(t => t.type === 'note')
+  const regularTasks = tasks.filter(t => t.type !== 'note') // 'task' or null
+
   // Filter tasks by status and sort by creation date (newest first)
-  const filteredTasks = tasks
-    .filter(task => task.status === activeTab)
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  const filteredItems = activeTab === 'notes'
+    ? notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    : regularTasks
+        .filter(task => task.status === activeTab)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
   
   // Count tasks by status
-  const pendingCount = tasks.filter(t => t.status === 'pendiente').length
-  const inProgressCount = tasks.filter(t => t.status === 'en_progreso').length
-  const completedCount = tasks.filter(t => t.status === 'completado').length
+  const pendingCount = regularTasks.filter(t => t.status === 'pendiente').length
+  const inProgressCount = regularTasks.filter(t => t.status === 'en_progreso').length
+  const completedCount = regularTasks.filter(t => t.status === 'completado').length
+  const notesCount = notes.length
 
-  function handleSubmit(e) {
+  function handleTaskSubmit(e) {
     e.preventDefault()
     if (taskTitle.trim()) {
-      // Convert datetime-local to ISO string if dueDate is set
       const dueDateISO = dueDate ? new Date(dueDate).toISOString() : null
       
       onAddTask(
@@ -43,7 +62,8 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
         isRecurring ? { 
           duration: parseInt(recurringDuration) || 21,
           targetCount: parseInt(targetCount) || 1
-        } : null
+        } : null,
+        'task' // Type
       )
       
       setTaskTitle('')
@@ -54,6 +74,28 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
       setTargetCount(1)
       setIsAddingTask(false)
     }
+  }
+
+  function handleNoteSubmit(e) {
+    e.preventDefault()
+    
+    if (!noteTitle.trim()) {
+      setShowNoteError(true)
+      setTimeout(() => setShowNoteError(false), 500)
+      return
+    }
+
+    onAddTask(
+      category.id,
+      noteTitle.trim(),
+      noteDescription.trim(),
+      null, // No due date
+      null, // No recurring
+      'note' // Type
+    )
+    setNoteTitle('')
+    setNoteDescription('')
+    setIsAddingNote(false)
   }
 
   function handleUpdateCategory(e) {
@@ -79,10 +121,21 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
   }
 
   return (
-    <div className={`column ${isFocused ? 'focused' : ''}`}>
+    <div 
+      className={`column ${isFocused ? 'focused' : ''}`}
+      onClick={(e) => {
+        if (!isFocused) {
+          onFocus()
+        }
+      }}
+    >
       <div className="column-header">
         {isEditingCategory ? (
-          <form onSubmit={handleUpdateCategory} className="category-edit-form">
+          <form 
+            onSubmit={handleUpdateCategory} 
+            className="category-edit-form"
+            onClick={(e) => e.stopPropagation()}
+          >
             <input
               type="text"
               value={categoryName}
@@ -101,19 +154,25 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
           </form>
         ) : (
           <>
-            <h2 className="column-title" onClick={onFocus} style={{ cursor: 'pointer' }}>
+            <h2 className="column-title" style={{ cursor: 'pointer' }}>
               {category.name}
             </h2>
             <div className="column-header-actions">
               <button
-                onClick={() => setIsEditingCategory(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsEditingCategory(true)
+                }}
                 className="btn-icon"
                 title="Editar categoría"
               >
                 <img src={editIcon} alt="Editar" />
               </button>
               <button
-                onClick={handleDeleteCategory}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteCategory()
+                }}
                 className="btn-icon btn-delete"
                 title="Eliminar categoría"
               >
@@ -121,7 +180,10 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
               </button>
               {isFocused && (
                 <button
-                  onClick={onExitFocus}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onExitFocus()
+                  }}
                   className="btn-icon btn-exit-focus"
                   title="Salir del modo focus (Esc)"
                 >
@@ -133,55 +195,85 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
         )}
       </div>
 
-      <div className="column-tabs">
+      <div className="column-tabs" onClick={(e) => e.stopPropagation()}>
         <button
           className={`tab ${activeTab === 'pendiente' ? 'active' : ''}`}
           onClick={() => setActiveTab('pendiente')}
+          title="Pendiente"
         >
-          Pendiente ({pendingCount})
+          Pend. ({pendingCount})
         </button>
         <button
           className={`tab ${activeTab === 'en_progreso' ? 'active' : ''}`}
           onClick={() => setActiveTab('en_progreso')}
+          title="En Progreso"
         >
-          En Progreso ({inProgressCount})
+          Prog. ({inProgressCount})
         </button>
         <button
           className={`tab ${activeTab === 'completado' ? 'active' : ''}`}
           onClick={() => setActiveTab('completado')}
+          title="Completado"
         >
-          Completado ({completedCount})
+          Comp. ({completedCount})
+        </button>
+        <button
+          className={`tab ${activeTab === 'notes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('notes')}
+          title="Apuntes"
+        >
+          Notas ({notesCount})
         </button>
       </div>
 
-      {/* Task list */}
+      {/* Content list */}
       <div className="column-content">
-        {filteredTasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onUpdate={onUpdateTask}
-            onDelete={onDeleteTask}
-            onUpdateTaskStatus={onUpdateTaskStatus}
-            showHistory={historyTaskId === task.id}
-            onToggleHistory={() => setHistoryTaskId(historyTaskId === task.id ? null : task.id)}
-          />
-        ))}
+        {activeTab === 'notes' ? (
+          filteredItems.map((note) => (
+            <div key={note.id} onClick={(e) => e.stopPropagation()}>
+              <NoteCard
+                note={note}
+                onUpdate={onUpdateTask}
+                onDelete={onDeleteTask}
+              />
+            </div>
+          ))
+        ) : (
+          filteredItems.map((task) => (
+            <div key={task.id} onClick={(e) => e.stopPropagation()}>
+              <TaskCard
+                task={task}
+                onUpdate={onUpdateTask}
+                onDelete={onDeleteTask}
+                onUpdateTaskStatus={onUpdateTaskStatus}
+                showHistory={historyTaskId === task.id}
+                onToggleHistory={() => setHistoryTaskId(historyTaskId === task.id ? null : task.id)}
+              />
+            </div>
+          ))
+        )}
       </div>
 
       {/* Floating Action Button */}
-      {!isAddingTask && (
+      {!isAddingTask && !isAddingNote && (
         <button
-          onClick={() => setIsAddingTask(true)}
-          className="fab-add-task"
-          title="Agregar tarea"
+          onClick={(e) => {
+            e.stopPropagation()
+            if (activeTab === 'notes') {
+              setIsAddingNote(true)
+            } else {
+              setIsAddingTask(true)
+            }
+          }}
+          className={`fab-add-task ${activeTab === 'notes' ? 'fab-add-note' : ''}`}
+          title={activeTab === 'notes' ? "Agregar nota" : "Agregar tarea"}
         >
           <img src={plusIcon} alt="Agregar" width="20" height="20" />
         </button>
       )}
 
       {/* Add Task Modal */}
-      {isAddingTask && (
+      {isAddingTask && createPortal(
         <div className="modal-backdrop" onClick={() => {
           setIsAddingTask(false)
           setTaskTitle('')
@@ -189,9 +281,10 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
           setDueDate('')
           setIsRecurring(false)
           setTargetCount(1)
-        }}>  <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 className="modal-title">Nueva Tarea</h3>
-            <form onSubmit={handleSubmit} className="task-form-modal">
+            <form onSubmit={handleTaskSubmit} className="task-form-modal">
               <input
                 type="text"
                 value={taskTitle}
@@ -210,14 +303,6 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
               <textarea
                 value={taskDescription}
                 onChange={(e) => setTaskDescription(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setTaskTitle('')
-                    setTaskDescription('')
-                    setDueDate('')
-                    setIsRecurring(false)
-                  }
-                }}
                 placeholder="Descripción (opcional)"
                 className="task-textarea-modal"
                 rows="4"
@@ -301,7 +386,72 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Add Note Modal - Full Screen Mobile Logic */}
+      {isAddingNote && createPortal(
+        <div className="modal-backdrop note-edit-backdrop" onClick={() => {
+          setIsAddingNote(false)
+          setNoteTitle('')
+          setNoteDescription('')
+          setShowNoteError(false)
+        }}>
+          <div className="modal-content note-edit-modal" onClick={(e) => e.stopPropagation()}>
+            <form onSubmit={handleNoteSubmit} className="note-edit-form-full">
+              <div className="note-edit-header">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setIsAddingNote(false)
+                    setNoteTitle('')
+                    setNoteDescription('')
+                    setShowNoteError(false)
+                  }}
+                  className="btn-icon-action btn-cancel-action" 
+                  title="Cancelar"
+                >
+                  <img src={xIcon} alt="Cancelar" width="24" height="24" />
+                </button>
+                <h3 className="modal-title-center">Nuevo Apunte</h3>
+                <button type="submit" className="btn-icon-action btn-save-action" title="Guardar">
+                  <img src={checkIcon} alt="Guardar" width="24" height="24" />
+                </button>
+              </div>
+
+              <div className="note-edit-body">
+                <input
+                  type="text"
+                  value={noteTitle}
+                  onChange={(e) => {
+                    setNoteTitle(e.target.value)
+                    if (showNoteError) setShowNoteError(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setIsAddingNote(false)
+                      setNoteTitle('')
+                      setNoteDescription('')
+                      setShowNoteError(false)
+                    }
+                  }}
+                  placeholder="Título del apunte"
+                  className={`note-input-full ${showNoteError ? 'input-error shake' : ''}`}
+                  autoFocus
+                />
+                <textarea
+                  value={noteDescription}
+                  onChange={(e) => setNoteDescription(e.target.value)}
+                  placeholder="Escribe tu nota aquí..."
+                  className="note-textarea-full"
+                  style={{ fontFamily: "'Kalam', 'Architects Daughter', cursive, sans-serif" }}
+                />
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
       )}
       
       {/* Delete Category Confirmation Modal */}
