@@ -13,6 +13,7 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer; /* Click to expand */
   overflow: hidden; /* Hide overflow in mini view */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .column:hover {
@@ -170,6 +171,11 @@
   
   .column:not(.focused) .column-tabs {
      display: none; /* Hide tabs in mini view to save space */
+  }
+
+  /* Hide FAB in non-focused columns (grid view) */
+  .column:not(.focused) .fab-add-task {
+    display: none !important;
   }
 
   .column.focused .column-content {
