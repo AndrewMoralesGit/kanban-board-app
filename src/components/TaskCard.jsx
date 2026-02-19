@@ -4,6 +4,7 @@ import './TaskCard.css'
 import editIcon from '../assets/pencil.svg'
 import deleteIcon from '../assets/trash.svg'
 import historyIcon from '../assets/calendar-time.svg'
+import calendarIcon from '../assets/calendar-time.svg'
 import ConfirmModal from './ConfirmModal'
 
 // Helper function to calculate urgency status
@@ -65,6 +66,14 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
   
   const cardRef = useRef(null)
 
+  const statusConfig = {
+    pendiente: { color: '#a3a3a3', label: 'Pendiente' },
+    en_progreso: { color: '#d4d4d4', label: 'En Progreso' },
+    completado: { color: '#f5f5f5', label: 'Completado' }
+  }
+
+  const currentStatus = statusConfig[task.status] || statusConfig.pendiente
+
   function handleSave() {
     if (title.trim()) {
       const updates = { 
@@ -100,6 +109,21 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
     setShowDeleteConfirm(false)
   }
 
+// Sortable hooks removed
+
+  const combinedStyle = {
+    transform: dragOffset ? `translateX(${dragOffset}px)` : undefined,
+    transition: isDragging ? 'none' : 'transform 0.2s ease',
+    borderLeftColor: currentStatus.color,
+    touchAction: 'pan-y' // Allow vertical scrolling, handle horizontal manually
+  }
+
+  // Merge refs
+  // Merge refs
+  const setRefs = (node) => {
+    cardRef.current = node
+  }
+
   // Drag handlers
   function handleDragStart(e) {
     if (isEditing) return
@@ -125,17 +149,20 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
     // 1. Direction Locking Phase
     if (!isLocked.current) {
       // Need a small threshold to determine direction
-      const moveThreshold = 5
+      const moveThreshold = 15 // Increased from 5 to prevent accidental swipes
       
       if (Math.abs(diffX) > moveThreshold || Math.abs(diffY) > moveThreshold) {
         isLocked.current = true
         
-        // If vertical movement is dominant, IT IS A SCROLL. Ignore this drag.
+        // If vertical movement is dominant, IT IS A SCROLL OR DND-KIT DRAG. Ignore this swipe.
+        // If Dnd-Kit activates (8px or delay), isSortableDragging will become true and component re-renders.
+        
         if (Math.abs(diffY) > Math.abs(diffX)) {
           isHorizontalSwipe.current = false
           return
         } else {
-          // Horizontal dominant -> Start dragging
+          // Horizontal dominant -> Start dragging (Swipe)
+          // But only if DndKit hasn't claimed it.
           isHorizontalSwipe.current = true
           setIsDragging(true)
         }
@@ -185,17 +212,6 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
       }
       
       if (newStatus !== task.status) {
-        // Optimistic update for UI feel, but actual logic in App.jsx will handle bounce
-        // However, for better UX, we might want to check here too to animate the bounce
-        
-        // If COUNTER task trying to complete but not finished
-        if (newStatus === 'completado' && task.target_count > 1 && (task.current_count || 0) < task.target_count) {
-          // Visual bounce effect could be added here
-          // For now, we just triggering the update status which will handle the logic
-          // But to prevent the card from visually "sticking" in the wrong column during async,
-          // we rely on the parent's state update.
-        }
-        
         onUpdateTaskStatus(task.id, newStatus)
       }
     }
@@ -204,112 +220,37 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
     setIsDragging(false)
   }
 
-  // Get next/previous status labels
-  function getSwipeLabels() {
-    const labels = {
-      pendiente: { left: null, right: 'En Progreso' },
-      en_progreso: { left: 'Pendiente', right: 'Completado' },
-      completado: { left: 'En Progreso', right: null }
-    }
-    return labels[task.status] || labels.pendiente
-  }
-
-  const swipeLabels = getSwipeLabels()
-  // Show LEFT label when dragging RIGHT (label appears in the space on the left)
-  // Show RIGHT label when dragging LEFT (label appears in the space on the right)
-  const showLeftLabel = dragOffset > 10 && swipeLabels.right
-  const showRightLabel = dragOffset < -10 && swipeLabels.left
-
-  const statusConfig = {
-    pendiente: { color: '#a3a3a3', label: 'Pendiente' },
-    en_progreso: { color: '#d4d4d4', label: 'En Progreso' },
-    completado: { color: '#f5f5f5', label: 'Completado' }
-  }
-
-  const currentStatus = statusConfig[task.status] || statusConfig.pendiente
-
-  // Add/remove class to body when modal is open to disable hover effects
-  useEffect(() => {
-    if (showHistory || showDetailModal) {
-      document.body.classList.add('modal-open')
-    } else {
-      document.body.classList.remove('modal-open')
-    }
-    return () => document.body.classList.remove('modal-open')
-  }, [showHistory, showDetailModal])
-
-  if (isEditing) {
-    return (
-      <div className="task-card editing">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="task-edit-input"
-          autoFocus
-        />
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="task-edit-textarea"
-          rows="3"
-          placeholder="Descripción"
-        />
-        <div className="task-edit-due-date">
-          <input
-            type="datetime-local"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="task-edit-date-input"
-          />
-        </div>
-        <div className="task-edit-actions">
-          <button onClick={handleSave} className="btn btn-small btn-primary">
-            Guardar
-          </button>
-          <button onClick={handleCancel} className="btn btn-small btn-secondary">
-            Cancelar
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // ... render ...
 
   return (
     <div className={`task-card-wrapper status-${task.status}`}>
-      {/* Left label - shows when dragging RIGHT */}
-      <div className={`swipe-label swipe-label-left ${showLeftLabel ? 'visible' : ''}`}>
-        <span>{swipeLabels.right}</span>
-      </div>
-      
-      {/* Right label - shows when dragging LEFT */}
-      <div className={`swipe-label swipe-label-right ${showRightLabel ? 'visible' : ''}`}>
-        <span>{swipeLabels.left}</span>
-      </div>
+      {/* ... swipe labels ... */}
 
       <div
         ref={cardRef}
         className={`task-card ${isDragging ? 'dragging' : ''} ${showHistory ? 'history-active' : ''}`}
-        style={{
-          transform: `translateX(${dragOffset}px)`,
-          borderLeftColor: currentStatus.color
-        }}
+        style={combinedStyle}
         onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
         onMouseMove={handleDragMove}
         onMouseUp={handleDragEnd}
         onMouseLeave={handleDragEnd}
-        onTouchStart={handleDragStart}
         onTouchMove={handleDragMove}
         onTouchEnd={handleDragEnd}
       >
         <div className="task-card-header">
           <div className="task-card-actions">
+            
             <button
               onClick={onToggleHistory}
               className="btn-icon"
               title="Ver historial"
             >
-              <img src={historyIcon} alt="Historial" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M12 7v5l4 2" />
+              </svg>
             </button>
             <button
               onClick={() => setIsEditing(true)}
@@ -379,6 +320,7 @@ function TaskCard({ task, onUpdate, onDelete, onUpdateTaskStatus, onIncrementTas
                 {/* Due Date Badge */}
                 {task.due_date && (
                   <div className={`task-due-date ${getUrgencyStatus(task.due_date)}`}>
+                    <img src={calendarIcon} alt="" style={{ width: '14px', height: '14px', marginRight: '6px', opacity: 0.8 }} />
                     {getUrgencyStatus(task.due_date) === 'overdue' && 'Vencida: '}
                     {getUrgencyStatus(task.due_date) === 'urgent' && 'Vence: '}
                     {getUrgencyStatus(task.due_date) === 'soon' && 'Vence: '}

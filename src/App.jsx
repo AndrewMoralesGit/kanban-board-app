@@ -30,6 +30,10 @@ function AppContent() {
     loadBoards()
   }, [])
 
+  useEffect(() => {
+    loadBoards()
+  }, [])
+
   // Toggle header visibility
   const toggleHeader = () => {
     setHeaderVisible(!headerVisible)
@@ -597,6 +601,82 @@ function AppContent() {
     }
   }
 
+
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event
+    
+    if (!over) return
+
+    const activeId = active.id
+    const overId = over.id
+
+    if (activeId === overId) return
+
+    const activeTask = tasks.find(t => t.id === activeId)
+    const overTask = tasks.find(t => t.id === overId)
+
+    if (!activeTask || !overTask) return
+
+    // STRICT REORDERING: Prevent moving tasks between columns (different status)
+    if (activeTask.status !== overTask.status) return
+
+    // Calculate new position
+    // We need the items in the same column to calculate position
+    const columnTasks = tasks
+      .filter(t => t.category_id === activeTask.category_id && t.status === activeTask.status)
+      .sort((a, b) => (a.position || 0) - (b.position || 0))
+
+    const oldIndex = columnTasks.findIndex(t => t.id === activeId)
+    const newIndex = columnTasks.findIndex(t => t.id === overId)
+
+    let newPosition = 0
+    
+    if (newIndex === 0) {
+      // Moved to top
+      newPosition = (columnTasks[0].position || 0) - 1000
+    } else if (newIndex === columnTasks.length - 1) {
+      // Moved to bottom
+      newPosition = (columnTasks[columnTasks.length - 1].position || 0) + 1000
+    } else {
+      // Moved roughly to middle
+      // We need to verify direction to pick neighbors correctly from the SPLICED array
+      // But creating a new array via arrayMove is easier to reason about the final state
+      const reorderedColumnTasks = arrayMove(columnTasks, oldIndex, newIndex)
+      
+      const prevTask = reorderedColumnTasks[newIndex - 1]
+      const nextTask = reorderedColumnTasks[newIndex + 1]
+      
+      if (prevTask && nextTask) {
+        newPosition = (prevTask.position + nextTask.position) / 2
+      } else if (prevTask) {
+        newPosition = prevTask.position + 1000
+      } else if (nextTask) {
+        newPosition = nextTask.position - 1000
+      }
+    }
+
+    // Optimistic Update
+    setTasks(prevTasks => {
+      const newTasks = prevTasks.map(t => 
+        t.id === activeId 
+          ? { ...t, position: newPosition } 
+          : t
+      )
+      return newTasks
+    })
+
+    // Supabase Update
+    try {
+      await supabase
+        .from('tasks')
+        .update({ position: newPosition })
+        .eq('id', activeId)
+    } catch (error) {
+      console.error('Error updating position:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="app">
@@ -662,19 +742,20 @@ function AppContent() {
       </div>
       <Board
         categories={categories}
-        tasks={tasks}
-        onAddTask={addTask}
-        onUpdateTask={updateTask}
-        onDeleteTask={deleteTask}
-        onUpdateCategory={updateCategory}
-        onDeleteCategory={deleteCategory}
-        onUpdateTaskStatus={updateTaskStatus}
-        onIncrementTaskCount={incrementTaskCount}
-        historyTaskId={historyTaskId}
-        setHistoryTaskId={setHistoryTaskId}
-        newCategoryId={newCategoryId}
-        setNewCategoryId={setNewCategoryId}
-      />
+          tasks={tasks}
+          onAddTask={addTask}
+          onUpdateTask={updateTask}
+          onDeleteTask={deleteTask}
+          onUpdateCategory={updateCategory}
+          onDeleteCategory={deleteCategory}
+          onUpdateTaskStatus={updateTaskStatus}
+          onIncrementTaskCount={incrementTaskCount}
+          historyTaskId={historyTaskId}
+          setHistoryTaskId={setHistoryTaskId}
+          newCategoryId={newCategoryId}
+          setNewCategoryId={setNewCategoryId}
+        />
+
 
       <CategoryModal
         isOpen={isCategoryModalOpen}

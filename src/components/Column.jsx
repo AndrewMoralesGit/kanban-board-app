@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import TaskCard from './TaskCard'
 import NoteCard from './NoteCard'
@@ -31,17 +31,35 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
   const [isEditingCategory, setIsEditingCategory] = useState(false)
   const [categoryName, setCategoryName] = useState(category.name)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const editFormRef = useRef(null)
+
+  // Handle click outside to cancel edit
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (isEditingCategory && editFormRef.current && !editFormRef.current.contains(event.target)) {
+        handleCancelEdit()
+      }
+    }
+
+    if (isEditingCategory) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isEditingCategory])
 
   // Filter tasks vs notes
   const notes = tasks.filter(t => t.type === 'note')
   const regularTasks = tasks.filter(t => t.type !== 'note') // 'task' or null
 
-  // Filter tasks by status and sort by creation date (newest first)
+  // Filter tasks by status and sort by position (or creation date if no position)
   const filteredItems = activeTab === 'notes'
     ? notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     : regularTasks
         .filter(task => task.status === activeTab)
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .sort((a, b) => (a.position || 0) - (b.position || 0))
   
   // Count tasks by status
   const pendingCount = regularTasks.filter(t => t.status === 'pendiente').length
@@ -132,6 +150,7 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
       <div className="column-header">
         {isEditingCategory ? (
           <form 
+            ref={editFormRef}
             onSubmit={handleUpdateCategory} 
             className="category-edit-form"
             onClick={(e) => e.stopPropagation()}
@@ -157,6 +176,15 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
             <h2 className="column-title" style={{ cursor: 'pointer' }}>
               {category.name}
             </h2>
+            
+            {/* In Progress Indicator (Mini View) */}
+            {!isFocused && inProgressCount > 0 && (
+              <div className="column-progress-indicator" title={`${inProgressCount} tareas en progreso`}>
+                <span className="pulse-dot"></span>
+                {inProgressCount} en progreso
+              </div>
+            )}
+
             <div className="column-header-actions">
               <button
                 onClick={(e) => {
@@ -239,18 +267,18 @@ function Column({ category, tasks, onAddTask, onUpdateTask, onDeleteTask, onUpda
             </div>
           ))
         ) : (
-          filteredItems.map((task) => (
-            <div key={task.id} onClick={(e) => e.stopPropagation()}>
-              <TaskCard
-                task={task}
-                onUpdate={onUpdateTask}
-                onDelete={onDeleteTask}
-                onUpdateTaskStatus={onUpdateTaskStatus}
-                showHistory={historyTaskId === task.id}
-                onToggleHistory={() => setHistoryTaskId(historyTaskId === task.id ? null : task.id)}
-              />
-            </div>
-          ))
+            filteredItems.map((task) => (
+              <div key={task.id} onClick={(e) => e.stopPropagation()}>
+                <TaskCard
+                  task={task}
+                  onUpdate={onUpdateTask}
+                  onDelete={onDeleteTask}
+                  onUpdateTaskStatus={onUpdateTaskStatus}
+                  showHistory={historyTaskId === task.id}
+                  onToggleHistory={() => setHistoryTaskId(historyTaskId === task.id ? null : task.id)}
+                />
+              </div>
+            ))
         )}
       </div>
 
