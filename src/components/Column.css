@@ -107,6 +107,45 @@
   font-size: 2rem;
 }
 
+/* Mini View (Global) - Cards showing only title */
+.column:not(.focused) {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 !important;
+  height: 220px; /* Keep square-ish */
+  aspect-ratio: 1 / 1;
+}
+
+.column:not(.focused) .column-header {
+  border-bottom: none;
+  padding: 12px;
+  width: 100%;
+  justify-content: center;
+  height: 100%;
+  align-items: center;
+  display: flex;
+}
+
+.column:not(.focused) .column-content {
+  display: none !important; 
+}
+
+.column:not(.focused) .column-title {
+  font-size: 1.1rem; /* Slightly larger than mobile */
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+  max-height: 100%;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.column:not(.focused) .column-header-actions,
+.column:not(.focused) .column-tabs {
+  display: none;
+}
+
 /* Mobile Focus Mode */
 @media (max-width: 768px) {
   .column.focused {
@@ -130,55 +169,12 @@
     min-width: 0 !important;
     width: 100% !important;
     margin: 0 !important;
+    /* Removed padding override as global handles it */
   }
 
-  .column:not(.focused) {
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2px !important;
-  }
-
-  .column:not(.focused) .column-header {
-    border-bottom: none;
-    padding: 2px;
-    width: 100%;
-    justify-content: center;
-    height: 100%;
-    align-items: center;
-    display: flex;
-  }
-
-  /* Hide content that doesn't fit in mini mobile view */
-  .column:not(.focused) .column-content {
-    display: none !important; 
-  }
-
+  /* Font size adjustment for mobile mini view */
   .column:not(.focused) .column-title {
-    font-size: 0.65rem;
-    white-space: normal;
-    text-align: center;
-    line-height: 1.1;
-    max-height: 100%;
-    overflow: hidden;
-    word-break: break-word;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
-
-  /* Hide header actions in grid view mobile */
-  .column:not(.focused) .column-header-actions {
-    display: none;
-  }
-  
-  .column:not(.focused) .column-tabs {
-     display: none; /* Hide tabs in mini view to save space */
-  }
-
-  /* Hide FAB in non-focused columns (grid view) */
-  .column:not(.focused) .fab-add-task {
-    display: none !important;
+    font-size: 0.85rem; /* Smaller on mobile */
   }
 
   .column.focused .column-content {
